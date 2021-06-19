@@ -42,7 +42,7 @@ enum Direction {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static Duration gameSpeed = Duration(milliseconds: 200);
+  static Duration gameSpeed = Duration(milliseconds: 100);
   Direction direction = Direction.right;
   List snake = [
     [11, 15],
@@ -121,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   bool isGameOver() {
-    for (int i = 1; i < snake.length - 1; i++) {
+    for (int i = 1; i < snake.length; i++) {
       if (listEquals(snake[0], snake[i])) {
         return true;
       }
