@@ -1,10 +1,11 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sizedbox/providers/constant.dart';
-import 'package:sizedbox/providers/generate_list.dart';
-import 'package:sizedbox/widgets/colored_brick.dart';
-import 'package:sizedbox/widgets/small_brick.dart';
+import 'package:sizedbox/widgets/game_controller.dart';
 
 void main() {
   runApp(ProviderScope(child: MyApp()));
@@ -17,9 +18,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.indigo,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Snake Game'),
     );
   }
 }
@@ -31,48 +32,245 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-final screenSize = ChangeNotifierProvider((ref) => Constants());
-final gameGridList = ChangeNotifierProvider((ref) => GameGrid());
+final score = StateProvider((ref) => 0);
+
+enum Direction {
+  up,
+  down,
+  left,
+  right,
+}
 
 class _MyHomePageState extends State<MyHomePage> {
+  static Duration gameSpeed = Duration(milliseconds: 200);
+  Direction direction = Direction.right;
+  List snake = [
+    [11, 15],
+    [10, 15],
+    [9, 15],
+    [8, 15],
+    [7, 15],
+  ];
+  List food = [
+    [12, 24]
+  ];
+
+  bool isPlaying = false;
+
+  void createFood() {
+    int x = Random().nextInt(kTotalNoRow);
+    int y = Random().nextInt(kTotalNoColumn);
+    food = [
+      [x, y]
+    ];
+  }
+
+  void newSnake() {
+    direction = Direction.right;
+    snake = [
+      [11, 15],
+      [10, 15],
+      [9, 15],
+      [8, 15],
+      [7, 15],
+    ];
+    isPlaying = false;
+    context.read(score).state = 0;
+  }
+
+  void startGame() {
+    isPlaying = true;
+    Timer.periodic(gameSpeed, (timer) {
+      setState(
+        () {
+          if (isGameOver()) {
+            isPlaying = false;
+            timer.cancel();
+            showDialog(
+                context: context,
+                builder: (ctx) {
+                  return AlertDialog(
+                    title: const Text('Game Over'),
+                    content: Text('Your Score : ${context.read(score).state}'),
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            direction = null;
+                            newSnake();
+                            createFood();
+                          });
+
+                          Navigator.pop(context);
+                        },
+                        child: Text('Ok'),
+                      )
+                    ],
+                  );
+                });
+          } else {
+            moveSnake(direction);
+            if (foodEatenBySnake()) {
+              createFood();
+              context.read(score).state++;
+            }
+          }
+        },
+      );
+    });
+  }
+
+  bool isGameOver() {
+    for (int i = 1; i < snake.length - 1; i++) {
+      if (listEquals(snake[0], snake[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool foodEatenBySnake() {
+    for (var pos in snake) {
+      if (pos[0] == food.first[0] && pos[1] == food.first[1]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void moveSnake(Direction direction) {
+    if (Direction.right == direction) {
+      if (snake.first[0] >= kTotalNoRow - 1) {
+        snake.insert(0, [0, snake.first[1]]);
+      } else {
+        snake.insert(0, [snake.first[0] + 1, snake.first[1]]);
+      }
+    } else if (Direction.left == direction) {
+      if (snake.first[0] <= 0) {
+        snake.insert(0, [kTotalNoRow - 1, snake.first[1]]);
+      } else {
+        snake.insert(0, [snake.first[0] - 1, snake.first[1]]);
+      }
+    } else if (Direction.up == direction) {
+      if (snake.first[1] <= 0) {
+        snake.insert(0, [snake.first[0], kTotalNoColumn - 1]);
+      } else {
+        snake.insert(0, [snake.first[0], snake.first[1] - 1]);
+      }
+    } else if (Direction.down == direction) {
+      if (snake.first[1] >= kTotalNoColumn - 1) {
+        snake.insert(0, [snake.first[0], 0]);
+      } else {
+        snake.insert(0, [snake.first[0], snake.first[1] + 1]);
+      }
+    }
+
+    setState(() {
+      this.direction = direction;
+    });
+    if (!foodEatenBySnake()) {
+      snake.removeLast();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final List data = context.read(gameGridList).gameGridList;
-    context.read(screenSize).width = size.width * 0.8 - 6;
-    context.read(screenSize).height = (size.width * 0.7) * 2 - 6;
-    data[10][5] = 1;
-    data[10][3] = 1;
-    data[10][4] = 1;
-    data[10][6] = 1;
-    data[10][7] = 1;
-    print(data);
     return Scaffold(
+      backgroundColor: Colors.indigo[300],
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      //nBqeYdDh5CSPjwWX
-      body: Center(
-        child: UnconstrainedBox(
-          child: Container(
-            padding: EdgeInsets.all(3),
-            child: Column(
-              children: [
-                ...data.map(
-                  (e) => Row(
-                    children: [
-                      ...e.map((e) => e == 1
-                          ? ColorBrick(e.toString())
-                          : SmallBrick(e.toString())),
-                    ],
-                  ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Stack(
+                  children: [
+                    Center(
+                      child: AspectRatio(
+                        aspectRatio: kTotalNoRow / kTotalNoColumn,
+                        child: GridView.builder(
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: kTotalNoColumn * kTotalNoRow,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: kTotalNoRow),
+                          itemBuilder: (ctx, index) {
+                            int xAxis = index % kTotalNoRow;
+                            int yAxis = (index / kTotalNoRow).floor();
+                            Color color;
+                            bool isSnakeBody = false;
+
+                            for (var pos in snake) {
+                              if (pos[0] == xAxis && pos[1] == yAxis) {
+                                isSnakeBody = true;
+                                break;
+                              }
+                            }
+                            if (snake.first[0] == xAxis &&
+                                snake.first[1] == yAxis) {
+                              color = Colors.red;
+                            } else if (isSnakeBody) {
+                              color = Colors.black;
+                            } else if (food.first[0] == xAxis &&
+                                food.first[1] == yAxis) {
+                              color = Colors.green;
+                            } else {
+                              color = Colors.black54;
+                            }
+                            return Container(
+                              child: Container(color: color),
+                              margin: EdgeInsets.all(1),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.rectangle,
+                                border:
+                                    Border.all(color: Colors.black, width: 1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    isPlaying
+                        ? Container()
+                        : Align(
+                            child: Container(
+                              height: 200,
+                              width: 200,
+                              color: Colors.black54,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Tap To Play',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                    ),
+                                    iconSize: 60,
+                                    onPressed: isPlaying ? () {} : startGame,
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                  ],
                 ),
-              ],
+              ),
             ),
-            width: size.width * 0.8, //23.5632
-            height: (size.width * 0.7) * 2, //same
-            color: Colors.black12,
-          ),
+            GameController(moveSnake, direction),
+          ],
         ),
       ),
     );
