@@ -42,7 +42,7 @@ enum Direction {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static Duration gameSpeed = Duration(milliseconds: 100);
+  static Duration gameSpeed = Duration(milliseconds: 150);
   Direction direction = Direction.right;
   List snake = [
     [11, 15],
