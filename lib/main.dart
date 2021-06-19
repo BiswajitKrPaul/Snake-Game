@@ -52,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
     [7, 15],
   ];
   List food = [
-    [12, 24]
+    [Random().nextInt(kTotalNoRow), Random().nextInt(kTotalNoColumn)]
   ];
 
   bool isPlaying = false;
@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
             moveSnake(direction);
             if (foodEatenBySnake()) {
               createFood();
-              context.read(score).state++;
+              context.read(score).state += 10;
             }
           }
         },
@@ -179,98 +179,105 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.indigo[300],
       appBar: AppBar(
+        centerTitle: true,
         title: Text(widget.title),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: AspectRatio(
-                        aspectRatio: kTotalNoRow / kTotalNoColumn,
-                        child: GridView.builder(
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: kTotalNoColumn * kTotalNoRow,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: kTotalNoRow),
-                          itemBuilder: (ctx, index) {
-                            int xAxis = index % kTotalNoRow;
-                            int yAxis = (index / kTotalNoRow).floor();
-                            Color color;
-                            bool isSnakeBody = false;
+      body: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: AspectRatio(
+                          aspectRatio: kTotalNoRow / kTotalNoColumn,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 1),
+                            ),
+                            child: GridView.builder(
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: kTotalNoColumn * kTotalNoRow,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: kTotalNoRow),
+                              itemBuilder: (ctx, index) {
+                                int xAxis = index % kTotalNoRow;
+                                int yAxis = (index / kTotalNoRow).floor();
+                                Color color;
+                                bool isSnakeBody = false;
 
-                            for (var pos in snake) {
-                              if (pos[0] == xAxis && pos[1] == yAxis) {
-                                isSnakeBody = true;
-                                break;
-                              }
-                            }
-                            if (snake.first[0] == xAxis &&
-                                snake.first[1] == yAxis) {
-                              color = Colors.red;
-                            } else if (isSnakeBody) {
-                              color = Colors.black;
-                            } else if (food.first[0] == xAxis &&
-                                food.first[1] == yAxis) {
-                              color = Colors.green;
-                            } else {
-                              color = Colors.black54;
-                            }
-                            return Container(
-                              child: Container(color: color),
-                              margin: EdgeInsets.all(1),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.rectangle,
-                                border:
-                                    Border.all(color: Colors.black, width: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    isPlaying
-                        ? Container()
-                        : Align(
-                            child: Container(
-                              height: 200,
-                              width: 200,
-                              color: Colors.black54,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Tap To Play',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.bold),
+                                for (var pos in snake) {
+                                  if (pos[0] == xAxis && pos[1] == yAxis) {
+                                    isSnakeBody = true;
+                                    break;
+                                  }
+                                }
+                                if (snake.first[0] == xAxis &&
+                                    snake.first[1] == yAxis) {
+                                  color = Colors.red;
+                                } else if (isSnakeBody) {
+                                  color = Colors.black;
+                                } else if (food.first[0] == xAxis &&
+                                    food.first[1] == yAxis) {
+                                  color = Colors.green;
+                                } else {
+                                  color = Colors.transparent;
+                                }
+                                return Container(
+                                  child: Container(color: color),
+                                  margin: EdgeInsets.all(1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    shape: BoxShape.rectangle,
                                   ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.play_arrow_rounded,
-                                      color: Colors.white,
-                                    ),
-                                    iconSize: 60,
-                                    onPressed: isPlaying ? () {} : startGame,
-                                  )
-                                ],
-                              ),
+                                );
+                              },
                             ),
                           ),
-                  ],
+                        ),
+                      ),
+                      isPlaying
+                          ? Container()
+                          : Align(
+                              child: Container(
+                                height: 200,
+                                width: 200,
+                                color: Colors.black54,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Tap To Play',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 30,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.play_arrow_rounded,
+                                        color: Colors.white,
+                                      ),
+                                      iconSize: 60,
+                                      onPressed: isPlaying ? () {} : startGame,
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            GameController(moveSnake, direction),
-          ],
+              GameController(moveSnake, direction),
+            ],
+          ),
         ),
       ),
     );

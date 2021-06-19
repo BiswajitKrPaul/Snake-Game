@@ -12,11 +12,17 @@ class GameController extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Text(
-          'Score : ${watch(score).state}',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 30,
+        Flexible(
+          fit: FlexFit.tight,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Score : ${watch(score).state}',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+              ),
+            ),
           ),
         ),
         SizedBox(
